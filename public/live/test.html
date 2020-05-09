@@ -9,11 +9,16 @@
     <h1>Live</h1>
     <hr>
     <div class="video-player-container">
-        <video class="embed-responsive-item video-js vjs-theme-city" id="player" name="media" controls>
-            <source src="" type="video/mp4"></video>
+        <video class="" id="video-player" name="media"><!-- controls>-->
+            <source
+                src="https://commonsi-muc.azureedge.net/contents/MEIJ100001/5e99053415a42/contents/media_files/media/ssmovie.mp4"
+                type="video/mp4"></video>
     </div>
     <div>
         参加者: <span id="participants">0</span>
+        <input type="button" id="button-play" value="Play">
+        <input type="button" id="button-pause" value="Pause">
+        <input type="range" id="range-seek" min="0" max="1" step="0.01" value="0">
     </div>
 
 
@@ -21,11 +26,48 @@
     <script src="/synchronv/synchronv-client.js"></script>
     <script>
 
-        var live = new Synchronv("http://" + location.hostname + ":5001");
+        var video = document.getElementById("video-player");
+        video.addEventListener("seeking", e => console.log("seeking: " + video.currentTime));
+        video.addEventListener("seeked", e => console.log("seeked: " + video.currentTime));
+        var live = new Synchronv("http://" + "efaacbd8.ngrok.io"/* + location.hostname + ":5001"*/, video);
 
         live.onParticipantsChanged((count) => {
             document.getElementById("participants").innerText = count;
         });
+
+        video.addEventListener('seeking', e => {
+        })
+
+
+        //instant video control ui
+
+        var playButton = document.getElementById("button-play");
+        var pauseButton = document.getElementById("button-pause");
+
+        var seekBar = document.getElementById("range-seek");
+
+        live.onOperationStateChanged = (enabled) => {
+            playButton.disabled = !enabled;
+            pauseButton.disabled = !enabled;
+            seekBar.disabled = !enabled;
+        };
+
+        playButton.onclick = () => live.sendPlay();
+        pauseButton.onclick = () => live.sendPause();
+
+        var seekBarControledByVideo = false;
+
+        video.addEventListener('timeupdate', () => {
+            seekBarControledByVideo = true;
+            seekBar.value = video.currentTime / video.duration;
+            seekBarControledByVideo = false;
+        });
+
+        seekBar.oninput = () => {
+            if (!seekBarControledByVideo) {
+                live.sendSeek(seekBar.value * video.duration);
+            }
+        };
     </script>
 </body>
 
