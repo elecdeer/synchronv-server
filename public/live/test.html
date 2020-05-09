@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Live - synchronv</title>
+</head>
+
+<body>
+    <h1>Live</h1>
+    <hr>
+    <div class="video-player-container">
+        <video class="embed-responsive-item video-js vjs-theme-city" id="player" name="media" controls>
+            <source src="" type="video/mp4"></video>
+    </div>
+    <div>
+        参加者: <span id="participants">0</span>
+    </div>
+
+
+    <script src="/js/socket.io.slim.js"></script>
+    <script src="/synchronv/synchronv-client.js"></script>
+    <script>
+
+        var live = new Synchronv("http://" + location.hostname + ":5001");
+
+        live.onParticipantsChanged((count) => {
+            document.getElementById("participants").innerText = count;
+        });
+    </script>
+</body>
+
+</html>
