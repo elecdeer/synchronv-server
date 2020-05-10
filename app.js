@@ -11,6 +11,26 @@ var liveRouter = require('./routes/live');
 
 var app = express();
 
+
+//ポートマッピング
+const NatAPI = require("nat-api");
+const client = new NatAPI();
+client.map(5001, err => {
+  if(err){
+    return console.log("Error", err);
+  }
+  console.log(`port ${5001} mapped!`);
+});
+
+//グローバルip取得
+const fetch = require("node-fetch");
+fetch("http://ifconfig.moe/")
+  .then(res => res.text())
+  .then(body => {
+    console.log(body);
+  });
+
+
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
 app.set('view engine', 'pug');
