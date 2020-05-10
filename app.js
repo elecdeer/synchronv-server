@@ -15,12 +15,18 @@ var app = express();
 //ポートマッピング
 const NatAPI = require("nat-api");
 const client = new NatAPI();
-client.map(5001, err => {
-  if(err){
-    return console.log("Error", err);
-  }
-  console.log(`port ${5001} mapped!`);
-});
+
+const openPort = (port) => {
+  client.map(port, err => {
+    if(err){
+      return console.log("Error", err);
+    }
+    console.log(`port ${port} mapped!`);
+  });
+}
+
+openPort(3000);
+openPort(5001);
 
 //グローバルip取得
 const fetch = require("node-fetch");
