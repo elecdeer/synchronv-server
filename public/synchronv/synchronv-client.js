@@ -5,12 +5,13 @@ function Synchronv(socketHost, video) {
     var socket = io(socketHost)
     this.socket = socket;
 
-    this.sessionId = "";
+    this.sessionId = ""
+    this._askingForSeekingPosition = false;
 
     socket.on('connect', () => {
         console.log('connect');
         var joinData = {};
-        if(this.sessionId != "") joinData.session_id = this.sessionId;
+        if (this.sessionId != "") joinData.session_id = this.sessionId;
         socket.emit('join', joinData);
     });
 
@@ -20,10 +21,27 @@ function Synchronv(socketHost, video) {
 
         if (this.sessionId == "") {
             this.sessionId = data.session_id;
+            this.socket.emit('get_seek', {
+                session_id: this.sessionId
+            });
+            this._askingForSeekingPosition = true;
         }
 
         if (this._onParticipantsChanged !== void 0)
             this._onParticipantsChanged(data.count);
+    });
+
+    socket.on('notify_seek', (data) => {
+        if (!this._askingForSeekingPosition) return;
+        console.log(data);
+        this._askingForSeekingPosition = false;
+        if (data.is_playing) {
+            this.video.play();
+        } else {
+            this.video.pause();
+        }
+
+        this.video.currentTime = data.position;
     });
 
     socket.on('disconnect', () => {
@@ -63,8 +81,7 @@ function Synchronv(socketHost, video) {
         if (this.isInSeekingOperation) {
             this._endSeekingOperation();
             this.isSeeking = false;
-            if (data.autoplay)
-            {
+            if (data.autoplay) {
                 this.video.play();
             }
         }
@@ -112,12 +129,12 @@ Synchronv.prototype.sendSeek = function (position) {
     }
 }
 
-Synchronv.prototype._beginSeekingOperation = function(){
+Synchronv.prototype._beginSeekingOperation = function () {
     this.isInSeekingOperation = true;
     if (this.onOperationStateChanged !== void 0)
         this.onOperationStateChanged(false);
 }
-Synchronv.prototype._endSeekingOperation = function(){
+Synchronv.prototype._endSeekingOperation = function () {
     this.isInSeekingOperation = false;
     if (this.onOperationStateChanged !== void 0)
         this.onOperationStateChanged(true);

@@ -11,7 +11,7 @@
     <div class="video-player-container">
         <video class="" id="video-player" name="media"><!-- controls>-->
             <source
-                src="https://commonsi-muc.azureedge.net/contents/MEIJ100001/5e99053415a42/contents/media_files/media/ssmovie.mp4"
+                src=""
                 type="video/mp4"></video>
     </div>
     <div>
@@ -29,13 +29,14 @@
         var video = document.getElementById("video-player");
         video.addEventListener("seeking", e => console.log("seeking: " + video.currentTime));
         video.addEventListener("seeked", e => console.log("seeked: " + video.currentTime));
-        var live = new Synchronv("http://" + "efaacbd8.ngrok.io"/* + location.hostname + ":5001"*/, video);
+        var live = new Synchronv("http://" + location.hostname + ":5001", video);
 
         live.onParticipantsChanged((count) => {
             document.getElementById("participants").innerText = count;
         });
 
         video.addEventListener('seeking', e => {
+            console.log(video.paused);
         })
 
 

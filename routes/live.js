@@ -40,14 +40,19 @@ socketio.on('connection', function (socket) {
 
   socket.on("ready_to_play", (data) => onSocketReadyToPlay(socket, data));
 
+  socket.on("get_seek", (data) => onSocketGetSeek(socket, data));
+
 });
 
 //参加者管理
 
+//join
+//新規参加者のJoin
 function onSocketJoin(socket, data) {
 
   console.log("New participant joined.");
   //セッションIDのチェック
+  //クライアント切断後→再接続して、切断前のセッションIDを保持してる場合、セッションIDが違えば応答しない（動画URLなど変化している可能性があるため）
   if (data.session_id !== void 0 && data.session_id != liveSession.id) {
     console.log("Invalid session ID.");
     return;
@@ -58,38 +63,14 @@ function onSocketJoin(socket, data) {
     //未参加
     participant = {
       socket: socket,
-      readyToPlay: false
+      readyToPlay: false,
+      needToWaitForReadyToPlay: false
     };
     liveSession.participants.push(participant);
 
     console.log("Participant registered.");
     console.log(liveSession);
     notifyParticipantsChanged();
-    console.log("liveSession.seekingAutoPlay: " + liveSession.seekingAutoPlay)
-    //シーク位置の同期
-    if (liveSession.isInSeekingOperation) {
-      //すでにシーク操作中の場合
-
-      participant.socket.emit("control_seek",
-        {
-          session_id: liveSession.id,
-          position: liveSession.seekingPosition
-        });
-
-    } else {
-      //再生中の場合
-      //現在位置を算出
-      var passed = (Date.now() - liveSession.seekingCompletedTime) * 0.001;
-
-      if (liveSession.seekingAutoPlay) {
-        //再生中
-        startSeek(liveSession.seekingPosition + passed, true);
-      } else {
-        //停止中
-        startSeek(liveSession.seekingPosition, false);
-      }
-
-    }
 
 
   } else {
@@ -98,6 +79,52 @@ function onSocketJoin(socket, data) {
   }
 }
 
+//get_seek
+function onSocketGetSeek(socket, data) {
+
+  console.log("get_seek requested.");
+  //セッションIDのチェック
+  if (data.session_id !== void 0 && data.session_id != liveSession.id) {
+    console.log("Invalid session ID.");
+    return;
+  }
+
+  console.log("liveSession.seekingAutoPlay: " + liveSession.seekingAutoPlay);
+  //シーク位置の通知
+  if (liveSession.isInSeekingOperation) {
+    //すでにシーク操作中の場合、新規socketにcontrol_seekを流す？
+    //ready_to_playが返るまでほかのClientも待つことになるが……
+    participant.socket.emit("control_seek",
+      {
+        session_id: liveSession.id,
+        position: liveSession.seekingPosition,
+      });
+
+  } else {
+    //再生中の場合、notify_seekを応答（無理にほかのClientと同期はとらない）
+    //現在位置を算出
+    var passed = (Date.now() - liveSession.seekingCompletedTime) * 0.001;
+
+    if (liveSession.seekingAutoPlay) {
+      //再生中
+      socket.emit("notify_seek", {
+        session_id: liveSession.id,
+        is_playing: true,
+        position: liveSession.seekingPosition + passed
+      });
+    } else {
+      //停止中
+      socket.emit("notify_seek", {
+        session_id: liveSession.id,
+        is_playing: true,
+        position: liveSession.seekingPosition
+      });
+    }
+
+  }
+}
+
+//disconnect
 function onSocketDisconnect(socket) {
 
   console.log("Participant disconnected.");
@@ -149,20 +176,21 @@ function startSeek(position, autoplay) {
   liveSession.isInSeekingOperation = true;
   liveSession.seekingAutoPlay = autoplay;
   liveSession.seekingPosition = position;
+
   liveSession.participants.forEach((participant, index) => {
     participant.readyToPlay = false;
+    participant.needToWaitForReadyToPlay = true;
     participant.socket.emit("control_seek",
       {
         session_id: liveSession.id,
         position: position
       });
   });
-  
+
   //タイムアウトの設定
   liveSession.seekingStartedTime = Date.now();
-  setTimeout(() =>{
-    if(Date.now() - liveSession.seekingStartedTime >= seekingTimeout)
-    {
+  setTimeout(() => {
+    if (Date.now() - liveSession.seekingStartedTime >= seekingTimeout) {
       completeSeek();
     }
   }, seekingTimeout + 100)
@@ -185,25 +213,24 @@ function onSocketReadyToPlay(socket, data) {
 
   participant.readyToPlay = true;
 
-  var participantsCount = liveSession.participants.length;
+  var needToWaitForReadyToPlayCount = liveSession.participants.filter((participant) => participant.needToWaitForReadyToPlay).length;
   var readyToPlayCount = 0;
   liveSession.participants.forEach((participant, index) => {
     if (participant.readyToPlay) readyToPlayCount++;
   });
 
-  console.log("Ready to play: " + readyToPlayCount + "/" + participantsCount);
+  console.log("Ready to play: " + readyToPlayCount + "/" + needToWaitForReadyToPlayCount);
 
   //control_seekを行った全クライアントがready_to_playを返した
-  if (readyToPlayCount == participantsCount) {
+  if (readyToPlayCount == needToWaitForReadyToPlayCount) {
     completeSeek();
   }
 }
 
-function completeSeek()
-{
+function completeSeek() {
   //シーク同期処理中でなければ弾く
   if (!liveSession.isInSeekingOperation) return;
-  
+
   liveSession.isInSeekingOperation = false;
   liveSession.seekingCompletedTime = Date.now();
   console.log("Broadcast complete_seek. autoplay: " + liveSession.seekingAutoPlay);
