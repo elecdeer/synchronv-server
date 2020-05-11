@@ -20,13 +20,26 @@ const client = new NatAPI({
 });
 
 const openPort = (port) => {
-  client.map(port, err => {
+  client.map(port, port, err => {
     if(err){
-      return console.log("Error", err);
+      console.log("Error", err);
+      return;
     }
     console.log(`port ${port} mapped!`);
   });
 }
+
+
+process.on("exit", function() {
+  console.log("Exitting...");
+  client.destroy();
+  console.log("port client destroy!");
+})
+process.on("SIGINT", function () {
+  process.exit(0);
+});
+
+
 
 openPort(3000);
 openPort(5001);
