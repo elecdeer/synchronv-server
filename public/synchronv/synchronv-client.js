@@ -5,21 +5,21 @@ function Synchronv(socketHost, video) {
     var socket = io(socketHost)
     this.socket = socket;
 
-    this.sessionId = ""
+    this.sessionId = ''
     this._askingForSeekingPosition = false;
 
     socket.on('connect', () => {
         console.log('connect');
         var joinData = {};
-        if (this.sessionId != "") joinData.session_id = this.sessionId;
+        if (this.sessionId != '') joinData.session_id = this.sessionId;
         socket.emit('join', joinData);
     });
 
     socket.on('participants_changed', (data) => {
-        console.log("participants_changed");
+        console.log('participants_changed');
         console.log(data);
 
-        if (this.sessionId == "") {
+        if (this.sessionId == '') {
             this.sessionId = data.session_id;
             this.socket.emit('get_seek', {
                 session_id: this.sessionId
@@ -46,7 +46,7 @@ function Synchronv(socketHost, video) {
 
     socket.on('disconnect', () => {
         console.log('disconnected');
-        //this.sessionId = "";
+        //this.sessionId = '';
     });
 
     //video control setup
@@ -54,9 +54,9 @@ function Synchronv(socketHost, video) {
     this.video = video;
     this.isSeeking = false;
     this.isInSeekingOperation = false;
-    this.sessionId = "";
+    this.sessionId = '';
 
-    video.addEventListener("seeked", () => {
+    video.addEventListener('seeked', () => {
         if (this.isInSeekingOperation && this.isSeeking) {
             this.isSeeking = false;
             this.socket.emit('ready_to_play', {
@@ -66,7 +66,7 @@ function Synchronv(socketHost, video) {
     });
 
     socket.on('control_seek', (data) => {
-        console.log("control_seek");
+        console.log('control_seek');
         if (!this.isSeeking) {
             this._beginSeekingOperation();
             this.isSeeking = true;
@@ -76,12 +76,12 @@ function Synchronv(socketHost, video) {
     });
 
     socket.on('complete_seek', (data) => {
-        console.log("complete_seek");
-        console.log("autoplay: " + data.autoplay);
+        console.log('complete_seek');
+        console.log('seek_type: ' + data.seek_type);
         if (this.isInSeekingOperation) {
             this._endSeekingOperation();
             this.isSeeking = false;
-            if (data.autoplay) {
+            if (data.seek_type == 'play' || data.seek_type == 'seek_play') {
                 this.video.play();
             }
         }
@@ -99,7 +99,7 @@ Synchronv.prototype.sendPlay = function () {
         this.socket.emit('request_seek', {
             session_id: this.sessionId,
             position: this.video.currentTime,
-            autoplay: true
+            seek_type: 'play'
         });
     }
 }
@@ -111,7 +111,7 @@ Synchronv.prototype.sendPause = function () {
         this.socket.emit('request_seek', {
             session_id: this.sessionId,
             position: this.video.currentTime,
-            autoplay: false
+            seek_type: 'pause'
         });
     }
 }
@@ -119,12 +119,12 @@ Synchronv.prototype.sendPause = function () {
 Synchronv.prototype.sendSeek = function (position) {
     if (!this.isInSeekingOperation) {
         this._beginSeekingOperation();
-        let autoplay = !video.paused;
+        var seekType = (video.paused ? 'seek_pause' : 'seek_play');
         this.video.pause();
         this.socket.emit('request_seek', {
             session_id: this.sessionId,
             position: position,
-            autoplay: autoplay
+            seek_type: seekType
         });
     }
 }
