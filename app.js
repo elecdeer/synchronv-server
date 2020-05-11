@@ -14,7 +14,10 @@ var app = express();
 
 //ポートマッピング
 const NatAPI = require("nat-api");
-const client = new NatAPI();
+const client = new NatAPI({
+  ttl: 1200,
+  autoUpdate: true,
+});
 
 const openPort = (port) => {
   client.map(port, err => {
@@ -29,12 +32,18 @@ openPort(3000);
 openPort(5001);
 
 //グローバルip取得
-const fetch = require("node-fetch");
-fetch("http://ifconfig.moe/")
-  .then(res => res.text())
-  .then(body => {
-    console.log(body);
-  });
+// const fetch = require("node-fetch");
+// fetch("http://ifconfig.moe/")
+//   .then(res => res.text())
+//   .then(body => {
+//     console.log(body);
+//   });
+client.externalIp((err, ip) => {
+  if(err){
+    return console.log("Error", err);
+  }
+  console.log(ip);
+})
 
 
 // view engine setup
