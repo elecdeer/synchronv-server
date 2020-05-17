@@ -116,7 +116,7 @@ function onSocketGetSeek(socket, data) {
         //停止中
         socket.emit('notify_seek', {
           session_id: liveSession.id,
-          is_playing: true,
+          is_playing: false,
           position: liveSession.seekingPosition
         });
       }
@@ -249,18 +249,22 @@ function completeSeek() {
         });
     }
     if (participant.notifySeekScheduled) {
-      var isPlaying = '';
+      participant.notifySeekScheduled = false;
+
+      let isPlaying = false;
       if (liveSession.seekingType == 'play' || liveSession.seekingType == 'seek_play') {
         isPlaying = true;
       } else {
         isPlaying = false;
       }
+
       participant.socket.emit('notify_seek',
         {
           session_id: liveSession.id,
           is_playing: isPlaying,
           position: liveSession.seekingPosition
         });
+
     }
   });
 }
