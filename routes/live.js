@@ -1,11 +1,11 @@
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
-var uuid = require('uuid');
+const uuid = require('uuid');
 
 const seekingTimeout = 5000;
 
-var liveSession = {
+const liveSession = {
   id: undefined,
   participants: [],
   isInSeekingOperation: false,
@@ -23,8 +23,8 @@ liveSession.id = uuid.v4().split('-').join('');
 
 //WebSocket setup
 
-var http = require('http');
-var server = http.createServer();
+const http = require('http');
+const server = http.createServer();
 server.listen(5001);
 
 const socketio = require('socket.io')(server);
@@ -58,7 +58,7 @@ function onSocketJoin(socket, data) {
     return;
   }
 
-  var participant = liveSession.participants.find(p => p.socket == socket);
+  let participant = liveSession.participants.find(p => p.socket == socket);
   if (participant === void 0) {
     //未参加
     participant = {
@@ -89,7 +89,7 @@ function onSocketGetSeek(socket, data) {
     console.log('[Synchronv]' + 'Invalid session ID.');
     return;
   }
-  var participant = liveSession.participants.find(p => p.socket == socket);
+  const participant = liveSession.participants.find(p => p.socket == socket);
   if (participant === void 0) {
     //未参加
   } else {
@@ -103,7 +103,7 @@ function onSocketGetSeek(socket, data) {
     } else {
       //再生中の場合、notify_seekを応答（無理にほかのClientと同期はとらない）
       //現在位置を算出
-      var passed = (Date.now() - liveSession.seekingCompletedTime) * 0.001;
+      const passed = (Date.now() - liveSession.seekingCompletedTime) * 0.001;
 
       if (liveSession.seekingType == 'play' || liveSession.seekingType == 'seek_play') {
         //再生中
@@ -132,7 +132,7 @@ function onSocketDisconnect(socket) {
 
   console.log('[Synchronv]' + 'Participant disconnected.');
 
-  var participantIndex = liveSession.participants.findIndex(p => p.socket == socket);
+  const participantIndex = liveSession.participants.findIndex(p => p.socket == socket);
   if (participantIndex == -1) {
     //未参加
     console.log('[Synchronv]' + 'Participant not found.');
@@ -213,13 +213,13 @@ function onSocketReadyToPlay(socket, data) {
   //シーク同期処理中でなければ弾く
   if (!liveSession.isInSeekingOperation) return;
 
-  var participant = liveSession.participants.find((p) => p.socket == socket);
+  const participant = liveSession.participants.find((p) => p.socket == socket);
   if (participant === void 0) return;
 
   participant.readyToPlay = true;
 
-  var needToWaitForReadyToPlayCount = liveSession.participants.filter((participant) => participant.needToWaitForReadyToPlay).length;
-  var readyToPlayCount = 0;
+  const needToWaitForReadyToPlayCount = liveSession.participants.filter((participant) => participant.needToWaitForReadyToPlay).length;
+  let readyToPlayCount = 0;
   liveSession.participants.forEach((participant, index) => {
     if (participant.readyToPlay) readyToPlayCount++;
   });

@@ -1,10 +1,10 @@
 // users.js
 // ユーザー認証関連APIを実装
 
-var express = require('express');
-var router = express.Router();
+const express = require('express');
+const router = express.Router();
 
-var uuid = require('uuid');
+const uuid = require('uuid');
 
 //ルーティング
 
@@ -21,7 +21,7 @@ router.post('/create_temporary', function(req, res, next) {
 
 function show(req, res)
 {
-  var user = getUser(req.query.id);
+  const user = getUser(req.query.id);
   if(user === void 0)
   {
     res.status(404).json({error: 'User not found'});
@@ -32,11 +32,11 @@ function show(req, res)
 
 function create_temporary(req, res)
 {
-  var id = uuid.v4().split('-').join('');
-  var screen_name = req.body.screen_name;
-  var profile_image_url = req.body.profile_image_url;
+  const id = uuid.v4().split('-').join('');
+  const screen_name = req.body.screen_name;
+  const profile_image_url = req.body.profile_image_url;
 
-  var user = 
+  const user = 
   {
     id: id,
     screen_name: screen_name,
@@ -51,7 +51,7 @@ function create_temporary(req, res)
 
 //ユーザーエントリの操作関連（ゆくゆくDB対応するとしてひとまずObjectをラップ）
 
-var _users = []
+const _users = []
 
 function getUser(id)
 {
@@ -66,7 +66,7 @@ function addUser(userObj)
 
 function updateUser(id, userObj)
 {
-  var userIndex = _users.findIndex((user) => user.id == id);
+  const userIndex = _users.findIndex((user) => user.id == id);
   if(userIndex == -1) return false;
   _users.splice(userIndex, 1);
   addUser(userObj);

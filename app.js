@@ -1,17 +1,17 @@
-var createError = require('http-errors');
-var express = require('express');
-var path = require('path');
-var cookieParser = require('cookie-parser');
-var logger = require('morgan');
+const createError = require('http-errors');
+const express = require('express');
+const path = require('path');
+const cookieParser = require('cookie-parser');
+const logger = require('morgan');
 
 
 
-var indexRouter = require('./routes/index');
-var usersApiRouter = require('./routes/users_api');
+const indexRouter = require('./routes/index');
+const usersApiRouter = require('./routes/users_api');
 
-var liveRouter = require('./routes/live');
+const liveRouter = require('./routes/live');
 
-var app = express();
+const app = express();
 
 //Body Parser
 const bodyParser = require('body-parser');
