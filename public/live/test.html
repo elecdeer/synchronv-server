@@ -18,7 +18,9 @@
         参加者: <span id="participants">0</span>
         <input type="button" id="button-play" value="Play">
         <input type="button" id="button-pause" value="Pause">
-        <input type="range" id="range-seek" min="0" max="1" step="0.01" value="0">
+        <input type="range" id="range-seek" min="0" max="1" step="0.001" value="0">
+        <input type="button" id="button-speed-down" value="x1">
+        <input type="button" id="button-speed-up" value="x1.5">
     </div>
 
 
@@ -46,6 +48,8 @@
         var pauseButton = document.getElementById("button-pause");
 
         var seekBar = document.getElementById("range-seek");
+        var speedUpButton = document.getElementById("button-speed-up");
+        var speedDownButton = document.getElementById("button-speed-down");
 
         live.onOperationStateChanged = (enabled) => {
             playButton.disabled = !enabled;
@@ -69,6 +73,17 @@
                 live.sendSeek(seekBar.value * video.duration);
             }
         };
+
+        speedDownButton.onclick = () =>
+        {
+                live.sendSeek(video.currentTime, 1);
+        }
+        
+        speedUpButton.onclick = () =>
+        {
+                live.sendSeek(video.currentTime, 1.5);
+        }
+        
     </script>
 </body>
 

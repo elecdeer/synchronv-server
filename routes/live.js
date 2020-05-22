@@ -8,6 +8,7 @@ const seekingTimeout = 5000;
 const liveSession = {
   id: undefined,
   participants: [],
+  playbackSpeed: 1,
   isInSeekingOperation: false,
   seekingControlMessageCount: 0,
   seekingReadyToPlayCount: 0,
@@ -110,14 +111,16 @@ function onSocketGetSeek(socket, data) {
         socket.emit('notify_seek', {
           session_id: liveSession.id,
           is_playing: true,
-          position: liveSession.seekingPosition + passed
+          position: liveSession.seekingPosition + passed * liveSession.playbackSpeed,
+          playback_speed: liveSession.playbackSpeed
         });
       } else {
         //停止中
         socket.emit('notify_seek', {
           session_id: liveSession.id,
           is_playing: false,
-          position: liveSession.seekingPosition
+          position: liveSession.seekingPosition,
+          playback_speed: liveSession.playbackSpeed
         });
       }
 
@@ -165,10 +168,15 @@ function onSocketRequestSeek(socket, data) {
     console.log('[Synchronv]' + 'Invalid session ID.');
     return;
   }
-  startSeek(data.position, data.seek_type);
+  let playbackSpeed = data.playback_speed;
+  if(playbackSpeed === void 0)
+  {
+    playbackSpeed = liveSession.playbackSpeed;
+  }
+  startSeek(data.position, data.seek_type, playbackSpeed);
 }
 
-function startSeek(position, seekType) {
+function startSeek(position, seekType, playbackSpeed) {
 
   if (liveSession.isInSeekingOperation) {
     //別のシークリクエストの処理中は弾く
@@ -179,6 +187,7 @@ function startSeek(position, seekType) {
   liveSession.isInSeekingOperation = true;
   liveSession.seekingType = seekType;
   liveSession.seekingPosition = position;
+  liveSession.playbackSpeed = playbackSpeed;
 
   liveSession.participants.forEach((participant, index) => {
     participant.readyToPlay = false;
@@ -245,7 +254,8 @@ function completeSeek() {
       participant.socket.emit('complete_seek',
         {
           session_id: liveSession.id,
-          seek_type: liveSession.seekingType
+          seek_type: liveSession.seekingType,
+          playback_speed: liveSession.playbackSpeed
         });
     }
     if (participant.notifySeekScheduled) {
@@ -262,7 +272,8 @@ function completeSeek() {
         {
           session_id: liveSession.id,
           is_playing: isPlaying,
-          position: liveSession.seekingPosition
+          position: liveSession.seekingPosition,
+          playback_speed: liveSession.playbackSpeed
         });
 
     }

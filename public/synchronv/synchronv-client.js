@@ -77,10 +77,12 @@ function Synchronv(socketHost, video) {
 
     socket.on('complete_seek', (data) => {
         console.log('complete_seek');
+        console.log(data);
         console.log('seek_type: ' + data.seek_type);
         if (this.isInSeekingOperation) {
             this._endSeekingOperation();
             this.isSeeking = false;
+            this.video.playbackRate = data.playback_speed;
             if (data.seek_type == 'play' || data.seek_type == 'seek_play') {
                 this.video.play();
             }
@@ -116,7 +118,7 @@ Synchronv.prototype.sendPause = function () {
     }
 }
 
-Synchronv.prototype.sendSeek = function (position) {
+Synchronv.prototype.sendSeek = function (position, playbackSpeed) {
     if (!this.isInSeekingOperation) {
         this._beginSeekingOperation();
         var seekType = (video.paused ? 'seek_pause' : 'seek_play');
@@ -124,7 +126,8 @@ Synchronv.prototype.sendSeek = function (position) {
         this.socket.emit('request_seek', {
             session_id: this.sessionId,
             position: position,
-            seek_type: seekType
+            seek_type: seekType,
+            playback_speed: playbackSpeed
         });
     }
 }
