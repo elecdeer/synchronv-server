@@ -22,6 +22,14 @@ app.set('port', port);
 var server = http.createServer(app);
 
 /**
+ * WebSocket setup
+ */
+console.log("require!");
+global.server = server;
+const liveRouter = require('../routes/live');
+require('express')().use('/live', liveRouter);
+
+/**
  * Listen on provided port, on all network interfaces.
  */
 

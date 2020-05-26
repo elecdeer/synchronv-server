@@ -31,7 +31,7 @@
         var video = document.getElementById("video-player");
         video.addEventListener("seeking", e => console.log("seeking: " + video.currentTime));
         video.addEventListener("seeked", e => console.log("seeked: " + video.currentTime));
-        var live = new Synchronv("http://" + location.hostname + ":5001", video);
+        var live = new Synchronv("http://" + location.hostname + ":3000", video);
 
         live.onParticipantsChanged((count) => {
             document.getElementById("participants").innerText = count;

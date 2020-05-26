@@ -24,11 +24,13 @@ liveSession.id = uuid.v4().split('-').join('');
 
 //WebSocket setup
 
-const http = require('http');
-const server = http.createServer();
-server.listen(5001);
+//const http = require('http');
+//const server = http.createServer();
+//server.listen(5001);
 
-const socketio = require('socket.io')(server);
+console.log(global.server);
+
+const socketio = require('socket.io')(global.server);
 
 socketio.on('connection', function (socket) {
   console.log('[Synchronv]' + 'New client connected.');

@@ -1,0 +1,2 @@
+curl -X POST -H "Content-Type: application/json" -d '{"screen_name": "ruccho", "profile_image_url": "https://ruccho.github.io/images/icon.png"}' localhost:3000/api/users/create_temporary
+curl http://localhost:3000/api/users/show?id=<paste id here>
