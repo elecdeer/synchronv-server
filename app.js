@@ -4,6 +4,8 @@ const path = require('path');
 const cookieParser = require('cookie-parser');
 const logger = require('morgan');
 
+var session = require('express-session');
+const uuid = require('uuid');
 
 
 const indexRouter = require('./routes/index');
@@ -20,7 +22,22 @@ app.use(bodyParser.urlencoded({
 }));
 app.use(bodyParser.json());
 
+//session
+const sessionMiddleware = session({
+  secret: uuid.v4().split('-').join(''),
+  resave: false,
+  saveUninitialized: false,
+  cookie:{
+  httpOnly: true,
+  secure: false,
+  maxage: 1000 * 60 * 30
+  }
+});
+global.session = sessionMiddleware;
+app.use(sessionMiddleware); 
+
 //ポートマッピング
+/*
 const NatAPI = require("nat-api");
 const client = new NatAPI({
   ttl: 1200,
@@ -36,12 +53,12 @@ const openPort = (port) => {
     console.log(`port ${port} mapped!`);
   });
 }
-
+*/
 
 process.on("exit", function() {
   console.log("Exitting...");
-  client.destroy();
-  console.log("port client destroy!");
+  //client.destroy();
+  //console.log("port client destroy!");
 })
 process.on("SIGINT", function () {
   process.exit(0);
@@ -49,8 +66,8 @@ process.on("SIGINT", function () {
 
 
 
-openPort(3000);
-openPort(5001);
+//openPort(3000);
+//openPort(5001);
 
 //グローバルip取得
 // const fetch = require("node-fetch");
@@ -59,13 +76,14 @@ openPort(5001);
 //   .then(body => {
 //     console.log(body);
 //   });
+/*
 client.externalIp((err, ip) => {
   if(err){
     return console.log("Error", err);
   }
   console.log(ip);
 })
-
+*/
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));

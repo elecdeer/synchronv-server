@@ -67,6 +67,7 @@ function Synchronv(socketHost, video) {
 
     socket.on('control_seek', (data) => {
         console.log('control_seek');
+        console.log(data.seek_type + ' by ' + data.requested_by.screen_name);
         if (!this.isSeeking) {
             this._beginSeekingOperation();
             this.isSeeking = true;

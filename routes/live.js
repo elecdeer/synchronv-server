@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 
 const uuid = require('uuid');
+const users = require('../users');
 
 const seekingTimeout = 5000;
 
@@ -28,9 +29,12 @@ liveSession.id = uuid.v4().split('-').join('');
 //const server = http.createServer();
 //server.listen(5001);
 
-console.log(global.server);
 
 const socketio = require('socket.io')(global.server);
+
+socketio.use(function(socket, next){
+  global.session(socket.request, socket.request.res, next);
+});
 
 socketio.on('connection', function (socket) {
   console.log('[Synchronv]' + 'New client connected.');
@@ -73,8 +77,10 @@ function onSocketJoin(socket, data) {
     liveSession.participants.push(participant);
 
     console.log('[Synchronv]' + 'Participant registered.');
-    console.log(liveSession);
-    notifyParticipantsChanged();
+    
+    const user = users.getAuthorizedUser(socket.request.session);
+
+    notifyParticipantsChanged([user], []);
 
 
   } else {
@@ -143,20 +149,25 @@ function onSocketDisconnect(socket) {
     console.log('[Synchronv]' + 'Participant not found.');
   } else {
     //すでに参加中
-    console.log('[Synchronv]' + 'Participant was successfully removed.');
     liveSession.participants.splice(participantIndex, 1);
+    console.log('[Synchronv]' + 'Participant was successfully removed.');
 
     console.log(liveSession);
-    notifyParticipantsChanged();
+
+    const user = users.getAuthorizedUser(socket.request.session);
+
+    notifyParticipantsChanged([], [user]);
   }
 }
 
-function notifyParticipantsChanged() {
+function notifyParticipantsChanged(joined, left) {
   liveSession.participants.forEach((participant, index) => {
     participant.socket.emit('participants_changed',
       {
         session_id: liveSession.id,
-        count: liveSession.participants.length
+        count: liveSession.participants.length,
+        joined: joined,
+        left, left
       });
   });
 }
@@ -175,10 +186,13 @@ function onSocketRequestSeek(socket, data) {
   {
     playbackSpeed = liveSession.playbackSpeed;
   }
-  startSeek(data.position, data.seek_type, playbackSpeed);
+
+  const requestedBy = users.getAuthorizedUser(socket.request.session);
+
+  startSeek(data.position, data.seek_type, playbackSpeed, requestedBy);
 }
 
-function startSeek(position, seekType, playbackSpeed) {
+function startSeek(position, seekType, playbackSpeed, requestedBy) {
 
   if (liveSession.isInSeekingOperation) {
     //別のシークリクエストの処理中は弾く
@@ -197,7 +211,9 @@ function startSeek(position, seekType, playbackSpeed) {
     participant.socket.emit('control_seek',
       {
         session_id: liveSession.id,
-        position: position
+        position: position,
+        seek_type: seekType,
+        requested_by: requestedBy
       });
   });
 

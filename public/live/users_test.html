@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Live - synchronv</title>
+</head>
+
+<body>
+    <h1>Users API test</h1>
+    <hr>
+
+    <h2>オレオレユーザーの登録 (create_temporary)</h2>
+    <form action="/api/users/create_temporary" method="post">
+        <p>
+            表示名：<input type="text" name="screen_name">
+        </p>
+        <p>
+            アイコンURL：<input type="text" name="profile_image_url">
+        </p>
+        <p>
+            <input type="submit" value="送信">
+        </p>
+    </form>
+
+    <hr>
+
+    <h2>ユーザー情報の表示 (show)</h2>
+    <form action="/api/users/show" method="get">
+        <p>
+            ID: <input type="text" name="id">
+        </p>
+        <p>
+            <input type="submit" value="送信">
+        </p>
+    </form>
+
+
+    <script>
+
+
+    </script>
+</body>
+
+</html>

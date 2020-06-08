@@ -7,6 +7,9 @@ const router = express.Router();
 
 const uuid = require('uuid');
 
+const users = require('../users');
+
+
 
 //ルーティング
 
@@ -22,7 +25,7 @@ router.post('/create_temporary', function (req, res, next) {
 //各エンドポイント
 
 function show(req, res) {
-  const user = getUser(req.query.id);
+  const user = users.getUser(req.query.id);
   if (user === void 0) {
     res.status(404).json({ error: 'User not found' });
 
@@ -44,35 +47,13 @@ function create_temporary(req, res) {
   
   console.log(user);
 
-  addUser(user);
+  const authKey = uuid.v4().split('-').join('');
+
+  users.addUser(user, authKey);
+  req.session.user_id = id;
+  req.session.auth_key = authKey;
   res.status(200).json(user);
-  //TODO: セッションに認証情報の保存
+  
 
 }
-
-//ユーザーエントリの操作関連（ゆくゆくDB対応するとしてひとまずObjectをラップ）
-
-const _users = []
-
-function getUser(id) {
-  return _users.find((user) => user.user_obj.id == id).user_obj;
-}
-
-function addUser(userObj) {
-  _users.push(
-    {
-      authentication: {},
-      user_obj: userObj
-    }
-  );
-  return true;
-}
-
-function updateUser(id, userObj) {
-  const userIndex = _users.findIndex((user) => user.user_obj.id == id);
-  if (userIndex == -1) return false;
-  _users[userIndex].user_obj = userObj;
-  return true;
-}
-
 module.exports = router;
