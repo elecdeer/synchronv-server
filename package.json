@@ -16,7 +16,7 @@
     "nat-api": "^0.3.0",
     "node-fetch": "^2.6.0",
     "pug": "2.0.0-beta11",
-    "socket.io": "^2.3.0",
+    "socket.io": "^2.5.0",
     "uuid": "^8.0.0"
   }
 }
